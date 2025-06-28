@@ -1,0 +1,2362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="https://baimg.bigjackson.top/img/favicon.ico" >
+    <title>BA抽卡模拟器-真实版</title>
+    <style>
+        /* 手机端测试样式 */
+        @media (max-width: 768px) {
+            .gacha-left {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                position: absolute !important;
+                left: -9999px !important;
+            }
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background-image: url('https://via.placeholder.com/1920x1080/4a6da7/ffffff?text=BA+Background');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4a6da7;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .gacha-banner {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, #4a6da7, #8ab4f8);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .gacha-banner::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://via.placeholder.com/100x100/ffffff/4a6da7?text=BA') center/contain no-repeat;
+            opacity: 0.1;
+        }
+        
+        .gacha-banner h2 {
+            color: white;
+            font-size: 2rem;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        #singlePull {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            color: white;
+        }
+        
+        #multiPull {
+            background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+            color: white;
+        }
+        
+        .results {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: scale(0.8);
+            animation: cardAppear 0.5s forwards;
+        }
+        
+        @keyframes cardAppear {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .card-image {
+            height: 70%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .card-rarity {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            font-size: 0.8rem;
+        }
+        
+        .rarity-3 {
+            background: linear-gradient(135deg, #ffd700, #ff9800);
+        }
+        
+        .rarity-2 {
+            background: linear-gradient(135deg, #b39ddb, #7e57c2);
+        }
+        
+        .rarity-1 {
+            background: linear-gradient(135deg, #a5d6a7, #4caf50);
+        }
+        
+        .card-info {
+            padding: 10px;
+            text-align: center;
+            height: 30%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .card-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+            color: #4a6da7;
+        }
+        
+        .card-type {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(74, 109, 167, 0.1);
+            border-radius: 10px;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4a6da7;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .loading-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4a6da7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .new-student {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background-color: #ff4081;
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* 画板样式 */
+        .drawing-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 101;
+            flex-direction: column;
+        }
+
+        .drawing-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .drawing-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4a6da7;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .drawing-instruction {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .drawing-canvas-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        canvas {
+            border: 3px solid #4a6da7;
+            border-radius: 10px;
+            background-color: white;
+            cursor: crosshair;
+            box-shadow: 0 4px 12px rgba(74, 109, 167, 0.2);
+        }
+
+        .drawing-tools {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: #4a6da7;
+            transform: scale(1.1);
+        }
+
+        .brush-size {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brush-size input {
+            width: 100px;
+        }
+
+        .drawing-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .drawing-btn {
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .drawing-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #finishDrawing {
+            background: linear-gradient(135deg, #4a6da7, #8ab4f8);
+            color: white;
+        }
+
+        #cancelDrawing {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            color: white;
+        }
+
+        #clearCanvas {
+            background: linear-gradient(135deg, #a5d6a7, #4caf50);
+            color: white;
+        }
+
+        .drawing-preview {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #666;
+            max-width: 200px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 15px;
+            }
+            
+            .results {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            
+            .card {
+                height: 160px;
+            }
+            
+            .card-name {
+                font-size: 0.9rem;
+            }
+            
+            .card-type {
+                font-size: 0.7rem;
+            }
+            
+            .stats {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .stat-box {
+                flex: 1;
+                min-width: 120px;
+                padding: 8px;
+            }
+            
+            .stat-value {
+                font-size: 1.3rem;
+            }
+            
+            .stat-label {
+                font-size: 0.8rem;
+            }
+
+            .drawing-container {
+                width: 95%;
+                padding: 15px;
+            }
+
+            canvas {
+                width: 100%;
+                height: auto;
+                max-width: 400px;
+                max-height: 300px;
+            }
+            
+            .drawing-tools {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .drawing-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .drawing-btn {
+                width: 100%;
+            }
+            
+            /* 顶部栏优化 */
+            .top-bar {
+                height: 44px;
+                padding: 0 16px;
+                font-size: 1rem;
+            }
+            
+            .top-bar .point-box {
+                padding: 3px 8px;
+                font-size: 0.8rem;
+            }
+            
+            /* 主内容区优化 - 手机版简化 */
+            .gacha-main {
+                margin: 20px auto 0 auto;
+                min-height: auto;
+                flex-direction: column;
+            }
+            
+            .gacha-left {
+                display: none !important; /* 隐藏角色大图和切换按钮 */
+            }
+            
+            .gacha-arrow {
+                display: none !important; /* 隐藏切换箭头 */
+            }
+            
+            .gacha-character {
+                display: none !important; /* 隐藏角色卡片 */
+            }
+            
+            .gacha-right {
+                margin-left: 0;
+                margin-top: 0;
+                min-width: auto;
+                width: 100%;
+                padding: 20px;
+                text-align: center;
+            }
+            
+            .event-title {
+                font-size: 1.8rem;
+                margin-bottom: 15px;
+            }
+            
+            .event-time {
+                font-size: 1rem;
+                margin-bottom: 12px;
+            }
+            
+            .event-highlight {
+                font-size: 1.2rem;
+                margin-bottom: 15px;
+            }
+            
+            .event-desc {
+                font-size: 1rem;
+                line-height: 1.6;
+            }
+            
+            /* 底部按钮优化 */
+            .gacha-bottom {
+                margin: 20px auto 0 auto;
+                gap: 12px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .point-box {
+                padding: 6px 12px;
+                font-size: 1rem;
+            }
+            
+            .gacha-btn {
+                font-size: 1rem;
+                padding: 10px 20px;
+                margin: 0 2px;
+            }
+            
+            /* 弹窗优化 */
+            .gacha-result-content {
+                padding: 20px;
+                min-width: 280px;
+                max-width: 95vw;
+            }
+            
+            .gacha-result-title {
+                font-size: 1.3rem;
+            }
+            
+            .gacha-result-cards {
+                gap: 12px;
+            }
+            
+            .gacha-result-card {
+                width: 90px;
+                padding: 6px;
+            }
+            
+            .gacha-result-card img {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .gacha-result-card .name {
+                font-size: 0.9rem;
+            }
+            
+            .gacha-result-card .type {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            
+            .container {
+                padding: 12px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .results {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .card {
+                height: 140px;
+            }
+            
+            .card-name {
+                font-size: 0.8rem;
+            }
+            
+            .card-type {
+                font-size: 0.6rem;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .stat-box {
+                min-width: auto;
+                padding: 6px;
+            }
+            
+            .stat-value {
+                font-size: 1.2rem;
+            }
+            
+            .stat-label {
+                font-size: 0.7rem;
+            }
+            
+            .drawing-container {
+                padding: 10px;
+            }
+            
+            .drawing-title {
+                font-size: 1.3rem;
+            }
+            
+            .drawing-instruction {
+                font-size: 0.9rem;
+            }
+            
+            /* 顶部栏进一步优化 */
+            .top-bar {
+                height: 40px;
+                padding: 0 12px;
+                font-size: 0.9rem;
+            }
+            
+            .top-bar .point-box {
+                padding: 2px 6px;
+                font-size: 0.7rem;
+            }
+            
+            /* 主内容区进一步优化 */
+            .gacha-main {
+                margin: 15px auto 0 auto;
+            }
+            
+            .gacha-left {
+                display: none !important; /* 确保小屏幕也隐藏角色大图 */
+            }
+            
+            .gacha-arrow {
+                display: none !important; /* 隐藏切换箭头 */
+            }
+            
+            .gacha-character {
+                display: none !important; /* 隐藏角色卡片 */
+            }
+            
+            .gacha-right {
+                padding: 15px;
+            }
+            
+            .event-title {
+                font-size: 1.6rem;
+            }
+            
+            .event-time {
+                font-size: 0.9rem;
+            }
+            
+            .event-highlight {
+                font-size: 1.1rem;
+            }
+            
+            .event-desc {
+                font-size: 0.9rem;
+            }
+            
+            /* 底部按钮进一步优化 */
+            .gacha-bottom {
+                margin: 15px auto 0 auto;
+                gap: 8px;
+            }
+            
+            .point-box {
+                padding: 5px 10px;
+                font-size: 0.9rem;
+            }
+            
+            .gacha-btn {
+                font-size: 0.9rem;
+                padding: 8px 16px;
+                margin: 0 1px;
+            }
+            
+            /* 弹窗进一步优化 */
+            .gacha-result-content {
+                padding: 15px;
+                min-width: 260px;
+            }
+            
+            .gacha-result-title {
+                font-size: 1.2rem;
+            }
+            
+            .gacha-result-cards {
+                gap: 8px;
+            }
+            
+            .gacha-result-card {
+                width: 80px;
+                padding: 5px;
+            }
+            
+            .gacha-result-card img {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .gacha-result-card .name {
+                font-size: 0.8rem;
+            }
+            
+            .gacha-result-card .type {
+                font-size: 0.7rem;
+            }
+        }
+        
+        /* 超小屏幕优化 */
+        @media (max-width: 360px) {
+            .results {
+                grid-template-columns: repeat(1, 1fr);
+            }
+            
+            .stats {
+                grid-template-columns: repeat(1, 1fr);
+            }
+            
+            .gacha-bottom {
+                flex-direction: column;
+                gap: 6px;
+            }
+            
+            .gacha-btn {
+                width: 100%;
+                margin: 0;
+            }
+            
+            .gacha-left {
+                display: none !important; /* 确保超小屏幕也隐藏角色大图 */
+            }
+            
+            .gacha-arrow {
+                display: none !important; /* 隐藏切换箭头 */
+            }
+            
+            .gacha-character {
+                display: none !important; /* 隐藏角色卡片 */
+            }
+            
+            .gacha-right {
+                padding: 12px;
+            }
+            
+            .event-title {
+                font-size: 1.4rem;
+            }
+            
+            .event-time {
+                font-size: 0.8rem;
+            }
+            
+            .event-highlight {
+                font-size: 1rem;
+            }
+            
+            .event-desc {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* 触摸设备优化 */
+        @media (hover: none) and (pointer: coarse) {
+            .gacha-btn {
+                min-height: 44px; /* 确保触摸目标足够大 */
+            }
+            
+            .gacha-arrow {
+                min-width: 44px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .card {
+                cursor: default;
+            }
+            
+            .drawing-btn {
+                min-height: 44px;
+            }
+            
+            /* 增加触摸反馈 */
+            .gacha-btn:active {
+                transform: scale(0.95);
+                transition: transform 0.1s;
+            }
+            
+            .gacha-arrow:active {
+                background-color: rgba(144, 202, 249, 0.2);
+                border-radius: 50%;
+            }
+        }
+        
+        /* 横屏优化 */
+        @media (orientation: landscape) and (max-height: 600px) {
+            .gacha-main {
+                margin: 10px auto 0 auto;
+            }
+            
+            .gacha-character img {
+                width: 120px;
+                height: 150px;
+            }
+            
+            .gacha-right {
+                padding: 15px;
+            }
+            
+            .event-title {
+                font-size: 1.2rem;
+            }
+            
+            .event-time {
+                font-size: 0.8rem;
+            }
+            
+            .event-highlight {
+                font-size: 0.9rem;
+            }
+            
+            .event-desc {
+                font-size: 0.8rem;
+            }
+            
+            .gacha-bottom {
+                margin: 10px auto 0 auto;
+            }
+            
+            .container {
+                margin-bottom: 10px;
+            }
+        }
+        
+        /* 高分辨率屏幕优化 */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .card-image {
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
+            }
+            
+            .gacha-character img {
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
+            }
+        }
+
+        .top-bar {
+            width: 100%;
+            height: 48px;
+            background: #e3f2fd;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(74,109,167,0.08);
+            padding: 0 32px;
+            font-size: 1.1rem;
+            user-select: none;
+        }
+        .top-left, .top-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .energy { color: #43a047; font-weight: bold; }
+        .coin { color: #fbc02d; font-weight: bold; }
+        .gem { color: #039be5; font-weight: bold; }
+        .icon { margin-left: 4px; }
+        .plus-icon::before { content: '+'; color: #90caf9; font-size: 1.3em; }
+        .settings-icon::before { content: '\2699'; color: #789; font-size: 1.3em; }
+        .energy-icon::before { content: '\26A1'; color: #43a047; }
+        .coin-icon::before { content: '\1F4B0'; }
+        .gem-icon::before { content: '\1F48E'; }
+        
+        /* 顶部栏中的point-box样式调整 */
+        .top-bar .point-box {
+            background: rgba(255,255,255,0.9);
+            border-radius: 6px;
+            padding: 4px 12px;
+            color: #1976d2;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border: 1px solid #90caf9;
+        }
+
+        .gacha-main {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 32px auto 0 auto;
+            max-width: 1100px;
+            width: 100%;
+            min-height: 420px;
+        }
+        .gacha-left {
+            flex: 1.2;
+            display: flex;
+            align-items: center;
+            position: relative;
+            min-width: 420px;
+        }
+        .gacha-arrow {
+            font-size: 2.2rem;
+            color: #90caf9;
+            cursor: pointer;
+            user-select: none;
+            padding: 0 12px;
+            transition: color 0.2s;
+        }
+        .gacha-arrow:hover { color: #1976d2; }
+        .gacha-character {
+            background: rgba(255,255,255,0.95);
+            border-radius: 18px;
+            box-shadow: 0 4px 16px rgba(74,109,167,0.10);
+            padding: 18px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 320px;
+        }
+        .gacha-character img {
+            width: 260px;
+            height: 320px;
+            object-fit: contain;
+            border-radius: 12px;
+            background: #e3f2fd;
+            margin-bottom: 12px;
+        }
+        .character-info {
+            text-align: center;
+        }
+        .star {
+            color: #ffd700;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .name {
+            color: #263238;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .cv {
+            color: #789;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+        .gacha-right {
+            flex: 1;
+            background: rgba(255,255,255,0.97);
+            border-radius: 18px;
+            box-shadow: 0 4px 16px rgba(74,109,167,0.10);
+            margin-left: 32px;
+            padding: 32px 28px 24px 28px;
+            min-width: 340px;
+        }
+        .event-title {
+            color: #1976d2;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .event-time {
+            color: #789;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        .event-highlight {
+            color: #0288d1;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .event-highlight .blue { color: #1976d2; }
+        .event-desc {
+            color: #333;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        .gacha-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            margin: 32px auto 0 auto;
+            max-width: 900px;
+            width: 100%;
+        }
+        .point-box {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 8px 18px;
+            color: #1976d2;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: 1.5px solid #90caf9;
+        }
+        .gacha-btn {
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 12px 32px;
+            margin: 0 4px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(74,109,167,0.08);
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+        }
+        .gacha-btn.single {
+            background: linear-gradient(90deg, #e3f2fd 60%, #b3e5fc 100%);
+            color: #1976d2;
+        }
+        .gacha-btn.multi {
+            background: linear-gradient(90deg, #fffde7 60%, #ffe082 100%);
+            color: #fbc02d;
+        }
+        .gacha-btn.select {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .gacha-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+        .gacha-btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 1px 2px rgba(74,109,167,0.18);
+            filter: brightness(0.96);
+        }
+        @media (max-width: 900px) {
+            .gacha-main { flex-direction: column; align-items: center; }
+            .gacha-right { margin-left: 0; margin-top: 24px; }
+        }
+        @media (max-width: 600px) {
+            .gacha-main { flex-direction: column; }
+            .gacha-left, .gacha-right { min-width: 0; width: 100%; }
+            .gacha-character img { width: 90vw; height: auto; }
+        }
+        .gacha-result-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .gacha-result-content {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(74,109,167,0.18);
+            padding: 32px 36px 24px 36px;
+            min-width: 340px;
+            max-width: 90vw;
+            text-align: center;
+            position: relative;
+        }
+        .gacha-result-title {
+            color: #1976d2;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 18px;
+        }
+        .gacha-result-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+        .gacha-result-card {
+            background: #f5fafd;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(74,109,167,0.10);
+            width: 110px;
+            padding: 8px 8px 10px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            animation: cardAppear 0.5s;
+        }
+        .gacha-result-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            background: #e3f2fd;
+        }
+        .gacha-result-card .star {
+            color: #ffd700;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .gacha-result-card .name {
+            color: #263238;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .gacha-result-card .type {
+            color: #789;
+            font-size: 0.9rem;
+        }
+        .gacha-result-close {
+            position: absolute;
+            top: 10px; right: 18px;
+            font-size: 1.5rem;
+            color: #789;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .gacha-result-close:hover { color: #1976d2; }
+        
+        /* 图片预览弹窗样式 */
+        .image-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .image-preview-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            cursor: default;
+        }
+        
+        .image-preview-content img {
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            object-fit: contain;
+            display: block;
+        }
+        
+        .image-preview-info {
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+        }
+        
+        .image-preview-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+        
+        .image-preview-details {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .image-preview-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        
+        .image-preview-close:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+        
+        /* 为可点击的图片添加悬停效果 */
+        .clickable-image {
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .clickable-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            .image-preview-content {
+                max-width: 95vw;
+                max-height: 95vh;
+            }
+            
+            .image-preview-info {
+                padding: 15px;
+            }
+            
+            .image-preview-name {
+                font-size: 1.3rem;
+            }
+            
+            .image-preview-details {
+                font-size: 0.9rem;
+            }
+            
+            .image-preview-close {
+                width: 35px;
+                height: 35px;
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部信息栏 -->
+    <div class="top-bar">
+        <div class="top-left">
+            <span class="gem">蔚蓝档案抽卡模拟器</span>
+        </div>
+        <div class="top-right">
+            <span class="point-box">BigJackson <span class="point-value">制作</span></span>
+        </div>
+    </div>
+    <!-- 主内容区 -->
+    <div class="gacha-main">
+        <!-- 左侧角色大图和信息 -->
+        <div class="gacha-left">
+            <div class="gacha-arrow left" id="prevBanner">&#8592;</div>
+            <div class="gacha-character">
+                <img id="characterImage" src="https://baimg.bigjackson.top/img/ailisi.png" alt="角色大图" class="clickable-image">
+                <div class="character-info">
+                    <div class="star">★★★</div>
+                    <div class="name">爱丽丝</div>
+                    <div class="cv">配音 田中美海</div>
+                </div>
+            </div>
+            <div class="gacha-arrow right" id="nextBanner">&#8594;</div>
+        </div>
+        <!-- 右侧活动信息 -->
+        <div class="gacha-right">
+            <div class="event-title">庆典招募！</div>
+            <div class="event-time">2025/06/28 14:00~2025/08/28 13:59截止</div>
+            <div class="event-highlight"><span class="blue">爱丽丝（3★）</span> 招募概率提升！</div>
+            <div class="event-desc">选择招募10次，必定获得1名2★以上成员！<br>※若出现已拥有的成员则会转换为神名精髓与该成员的神名字。</div>
+        </div>
+    </div>
+    <!-- 底部操作区 -->
+    <div class="gacha-bottom">
+        <button class="gacha-btn single">招募1次</button>
+        <button class="gacha-btn multi">招募10次</button>
+    </div>
+    
+    <!-- 抽卡统计区域 -->
+    <div class="container">
+        <h2 style="text-align: center; color: #4a6da7; margin-bottom: 20px;">抽卡统计</h2>
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="pullCount">0</div>
+                <div class="stat-label">总抽卡次数</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="threeStarCount">0</div>
+                <div class="stat-label">3★学生</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="twoStarCount">0</div>
+                <div class="stat-label">2★学生</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="oneStarCount">0</div>
+                <div class="stat-label">1★学生</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="newStudentCount">0</div>
+                <div class="stat-label">新学生</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="pityCount">0</div>
+                <div class="stat-label">保底进度</div>
+            </div>
+        </div>
+        
+        <!-- 概率信息 -->
+        <div style="text-align: center; margin: 20px 0; padding: 15px; background: rgba(74, 109, 167, 0.05); border-radius: 10px;">
+            <h3 style="color: #4a6da7; margin-bottom: 10px;">当前概率</h3>
+            <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
+                <div>
+                    <span style="color: #ffd700; font-weight: bold;">3★概率: 7.5%</span>
+                    <br><small style="color: #666;">保底: 200抽</small>
+                </div>
+                <div>
+                    <span style="color: #b39ddb; font-weight: bold;">2★概率: 18.5%</span>
+                </div>
+                <div>
+                    <span style="color: #a5d6a7; font-weight: bold;">1★概率: 74%</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 抽卡结果展示区域 -->
+        <div class="results" id="results"></div>
+    </div>
+    
+    <!-- 加载动画 -->
+    <div class="loading" id="loading">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3>招募中...</h3>
+        </div>
+    </div>
+    
+    <!-- 画板 -->
+    <div class="drawing-panel" id="drawingPanel">
+        <div class="drawing-container">
+            <div class="drawing-canvas-container">
+                <canvas id="drawingCanvas" width="600" height="400"></canvas>
+            </div>
+            
+            <div class="drawing-buttons">
+                <button class="drawing-btn" id="clearCanvas">🗑️ 清空画板</button>
+                <button class="drawing-btn" id="finishDrawing">✨ 完成绘制并抽卡</button>
+                <button class="drawing-btn" id="cancelDrawing">❌ 取消绘制</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 抽卡结果弹窗 -->
+    <div class="gacha-result-modal" id="gachaResultModal">
+        <div class="gacha-result-content">
+            <button class="gacha-result-close" id="closeGachaResult">×</button>
+            <div class="gacha-result-title" id="gachaResultTitle">抽卡结果</div>
+            <div class="gacha-result-cards" id="gachaResultCards"></div>
+        </div>
+    </div>
+    
+    <!-- 图片预览弹窗 -->
+    <div class="image-preview-modal" id="imagePreviewModal">
+        <div class="image-preview-content" id="imagePreviewContent">
+            <button class="image-preview-close" id="closeImagePreview">×</button>
+            <img id="previewImage" src="" alt="角色预览">
+            <div class="image-preview-info">
+                <div class="image-preview-name" id="previewName"></div>
+                <div class="image-preview-details" id="previewDetails"></div>
+            </div>
+        </div>
+    </div>
+    
+    <audio id="gachaSound" src="https://www.soundjay.com/buttons/sounds/button-09.mp3" preload="auto"></audio>
+    <audio id="rareSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3" preload="auto"></audio>
+    
+    <script>
+        // 学生数据
+        const students = [
+            // 3★学生
+            { id: 1, name: "阿露", type: "攻击", rarity: 3, image: "https://baimg.bigjackson.top/img/alu.jpg", new: false },
+            { id: 2, name: "白子", type: "攻击", rarity: 3, image: "https://baimg.bigjackson.top/img/baizi.png", new: false },
+            { id: 3, name: "日富美", type: "治疗", rarity: 3, image: "https://baimg.bigjackson.top/img/rifumei.png", new: false },
+            { id: 4, name: "优香", type: "防御", rarity: 3, image: "https://baimg.bigjackson.top/img/youxiang.png", new: false },
+            { id: 5, name: "星野", type: "防御", rarity: 3, image: "https://baimg.bigjackson.top/img/xingye.png", new: false },
+            { id: 6, name: "千世", type: "辅助", rarity: 3, image: "https://baimg.bigjackson.top/img/qianshi.png", new: false },
+            { id: 7, name: "明日奈", type: "防御", rarity: 3, image: "https://baimg.bigjackson.top/img/mingrinai.png", new: false },
+            { id: 8, name: "花凛", type: "辅助", rarity: 3, image: "https://baimg.bigjackson.top/img/hualing.png", new: false },
+            { id: 9, name: "睦月", type: "攻击", rarity: 3, image: "https://baimg.bigjackson.top/img/xiyue.png", new: false },
+            { id: 10, name: "芹香", type: "攻击", rarity: 3, image: "https://baimg.bigjackson.top/img/qinxiang.png", new: false },
+            { id: 11, name: "亚子", type: "辅助", rarity: 3, image: "https://baimg.bigjackson.top/img/yazi.png", new: false },
+            
+            // 2★学生
+            { id: 12, name: "小玉", type: "辅助", rarity: 2, image: "https://baimg.bigjackson.top/img/xiaoyu.png", new: false },
+            { id: 13, name: "绿", type: "辅助", rarity: 2, image: "https://baimg.bigjackson.top/img/lv.png", new: false },
+            { id: 14, name: "茜", type: "治疗", rarity: 2, image: "https://baimg.bigjackson.top/img/xi.png", new: false },
+            { id: 15, name: "桃井", type: "攻击", rarity: 2, image: "https://baimg.bigjackson.top/img/taojing.png", new: false },
+            { id: 16, name: "野宫", type: "攻击", rarity: 2, image: "https://baimg.bigjackson.top/img/yegong.png", new: false },
+            { id: 17, name: "千夏", type: "防御", rarity: 2, image: "https://baimg.bigjackson.top/img/qianxia.png", new: false },
+            { id: 18, name: "佳代子", type: "攻击", rarity: 2, image: "https://baimg.bigjackson.top/img/jiadaizi.png", new: false },
+            { id: 19, name: "铃美", type: "治疗", rarity: 2, image: "https://baimg.bigjackson.top/img/lingmei.png", new: false },
+            { id: 20, name: "莲见", type: "攻击", rarity: 2, image: "https://baimg.bigjackson.top/img/lianjian.png", new: false },
+            { id: 21, name: "泉", type: "攻击", rarity: 2, image: "https://baimg.bigjackson.top/img/quan.png", new: false },
+            
+            // 1★学生
+            { id: 22, name: "爱丽丝", type: "攻击", rarity: 1, image: "https://baimg.bigjackson.top/img/ailisi.png", new: false },
+            { id: 23, name: "小春", type: "辅助", rarity: 1, image: "https://baimg.bigjackson.top/img/xiaocun.png", new: false },
+            { id: 24, name: "小满", type: "防御", rarity: 1, image: "https://baimg.bigjackson.top/img/xiaoman.png", new: false },
+            { id: 25, name: "小桃", type: "攻击", rarity: 1, image: "https://baimg.bigjackson.top/img/taojing.png", new: false },
+            { id: 26, name: "小绿", type: "辅助", rarity: 1, image: "https://baimg.bigjackson.top/img/lv.png", new: false }
+        ];
+
+        // 游戏状态
+        const state = {
+            pullCount: 0,
+            threeStarCount: 0,
+            twoStarCount: 0,
+            oneStarCount: 0,
+            newStudentCount: 0,
+            ownedStudents: [],
+            currentPullCount: 0, // 当前要进行的抽卡次数
+            pityCount: 0, // 保底计数器
+            lastPullResults: [], // 最近一次抽卡结果
+            pullHistory: [] // 抽卡历史记录
+        };
+
+        // DOM元素
+        const resultsEl = document.getElementById('results');
+        const singlePullBtn = document.getElementById('singlePull');
+        const multiPullBtn = document.getElementById('multiPull');
+        const loadingEl = document.getElementById('loading');
+        const gachaSound = document.getElementById('gachaSound');
+        const rareSound = document.getElementById('rareSound');
+        const pullCountEl = document.getElementById('pullCount');
+        const threeStarCountEl = document.getElementById('threeStarCount');
+        const twoStarCountEl = document.getElementById('twoStarCount');
+        const oneStarCountEl = document.getElementById('oneStarCount');
+        const newStudentCountEl = document.getElementById('newStudentCount');
+        
+        // 画板相关元素
+        const drawingPanel = document.getElementById('drawingPanel');
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const finishDrawingBtn = document.getElementById('finishDrawing');
+        const cancelDrawingBtn = document.getElementById('cancelDrawing');
+
+        // 画板变量
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let currentColor = '#87CEEB';
+        let currentBrushSize = 3;
+
+        // 初始化画板
+        function initDrawingPanel() {
+            const ctx = drawingCanvas.getContext('2d');
+            
+            // 设置画布背景为白色
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            
+            // 事件监听
+            drawingCanvas.addEventListener('mousedown', startDrawing);
+            drawingCanvas.addEventListener('mousemove', draw);
+            drawingCanvas.addEventListener('mouseup', stopDrawing);
+            drawingCanvas.addEventListener('mouseout', stopDrawing);
+            
+            // 触摸支持 - 重写触摸事件处理
+            drawingCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            drawingCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            drawingCanvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+            drawingCanvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+            
+            // 按钮事件
+            finishDrawingBtn.addEventListener('click', finishDrawing);
+            cancelDrawingBtn.addEventListener('click', cancelDrawing);
+            document.getElementById('clearCanvas').addEventListener('click', clearCanvas);
+        }
+
+        // 开始绘制
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = drawingCanvas.getBoundingClientRect();
+            
+            // 计算画布缩放比例
+            const scaleX = drawingCanvas.width / rect.width;
+            const scaleY = drawingCanvas.height / rect.height;
+            
+            lastX = (e.clientX - rect.left) * scaleX;
+            lastY = (e.clientY - rect.top) * scaleY;
+        }
+
+        // 绘制中
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const ctx = drawingCanvas.getContext('2d');
+            const rect = drawingCanvas.getBoundingClientRect();
+            
+            // 计算画布缩放比例
+            const scaleX = drawingCanvas.width / rect.width;
+            const scaleY = drawingCanvas.height / rect.height;
+            
+            const currentX = (e.clientX - rect.left) * scaleX;
+            const currentY = (e.clientY - rect.top) * scaleY;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentX, currentY);
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = currentBrushSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+            
+            lastX = currentX;
+            lastY = currentY;
+        }
+
+        // 停止绘制
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        // 触摸开始 - 重写
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = drawingCanvas.getBoundingClientRect();
+            
+            // 计算画布缩放比例
+            const scaleX = drawingCanvas.width / rect.width;
+            const scaleY = drawingCanvas.height / rect.height;
+            
+            isDrawing = true;
+            lastX = (touch.clientX - rect.left) * scaleX;
+            lastY = (touch.clientY - rect.top) * scaleY;
+        }
+
+        // 触摸移动 - 重写
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!isDrawing) return;
+            
+            const touch = e.touches[0];
+            const rect = drawingCanvas.getBoundingClientRect();
+            const ctx = drawingCanvas.getContext('2d');
+            
+            const currentX = touch.clientX - rect.left;
+            const currentY = touch.clientY - rect.top;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentX, currentY);
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = currentBrushSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+            
+            lastX = currentX;
+            lastY = currentY;
+        }
+
+        // 触摸结束 - 重写
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            isDrawing = false;
+        }
+
+        // 完成绘制并抽卡
+        function finishDrawing() {
+            // 检查是否画了内容
+            const ctx = drawingCanvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+            const data = imageData.data;
+            
+            let nonWhitePixels = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                // 检查像素是否不是白色
+                if (data[i] !== 255 || data[i+1] !== 255 || data[i+2] !== 255) {
+                    nonWhitePixels++;
+                }
+            }
+            
+            if (nonWhitePixels < 100) {
+                // 显示更友好的提示，而不是alert
+                showDrawingHint();
+                return;
+            }
+            
+            drawingPanel.style.display = 'none';
+            
+            // 计算运气值（基于绘制内容的复杂度和数量）
+            const complexity = calculateDrawingComplexity(imageData);
+            const luckBonus = Math.min(8, Math.floor(complexity / 1000) + Math.floor(nonWhitePixels / 500));
+            
+            // 直接执行抽卡，不显示alert
+            doPull(state.currentPullCount, luckBonus);
+            
+            // 清空画板
+            clearCanvas();
+        }
+        
+        // 显示绘制提示
+        function showDrawingHint() {
+            const hintDiv = document.createElement('div');
+            hintDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+                color: white;
+                padding: 25px;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                z-index: 1001;
+                max-width: 400px;
+                text-align: center;
+                font-size: 1.1rem;
+                line-height: 1.5;
+            `;
+            
+            hintDiv.innerHTML = `
+                <h3 style="margin-bottom: 15px; font-size: 1.3rem;">🎨 请继续绘制</h3>
+                <p>请在画板上绘制更多内容哦！</p>
+                <p><strong>💡 建议：</strong></p>
+                <p>• 写"想要3星"、"欧气满满"等祈愿文字</p>
+                <p>• 画得越认真，运气加成越高！</p>
+                <button onclick="this.parentElement.remove()" style="
+                    background: white;
+                    color: #ff9a9e;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 20px;
+                    font-size: 1rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                    margin-top: 15px;
+                ">知道了</button>
+            `;
+            
+            document.body.appendChild(hintDiv);
+            
+            // 3秒后自动消失
+            setTimeout(() => {
+                if (hintDiv.parentElement) {
+                    hintDiv.remove();
+                }
+            }, 3000);
+        }
+
+        // 计算绘制复杂度
+        function calculateDrawingComplexity(imageData) {
+            const data = imageData.data;
+            let complexity = 0;
+            let colorChanges = 0;
+            let lastColor = null;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i] !== 255 || data[i+1] !== 255 || data[i+2] !== 255) {
+                    const currentColor = data[i] + ',' + data[i+1] + ',' + data[i+2];
+                    if (lastColor && lastColor !== currentColor) {
+                        colorChanges++;
+                    }
+                    lastColor = currentColor;
+                    complexity++;
+                }
+            }
+            
+            return complexity + colorChanges * 10;
+        }
+
+        // 取消绘制
+        function cancelDrawing() {
+            drawingPanel.style.display = 'none';
+            clearCanvas();
+        }
+
+        // 显示画板
+        function showDrawingPanel(pullCount) {
+            state.currentPullCount = pullCount;
+            drawingPanel.style.display = 'flex';
+            clearCanvas();
+        }
+
+        // 清空画板函数
+        function clearCanvas() {
+            const ctx = drawingCanvas.getContext('2d');
+            const w = drawingCanvas.width;
+            const h = drawingCanvas.height;
+            // 先填充白色底
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, w, h);
+            // 绘制蓝白斜条纹
+            const stripeWidth = 24; // 条纹宽度
+            ctx.save();
+            ctx.rotate(-Math.PI / 8); // 轻微倾斜
+            for (let i = -h; i < w * 2; i += stripeWidth * 2) {
+                ctx.fillStyle = '#b3e5fc'; // 浅蓝色
+                ctx.fillRect(i, 0, stripeWidth, h * 2);
+            }
+            ctx.restore();
+        }
+
+        // 初始化
+        function init() {
+            loadGameData(); // 加载保存的数据
+            updateStats();
+            initDrawingPanel();
+            addImageClickEvents(); // 添加图片点击事件
+            
+            // 绑定图片预览关闭事件
+            const closeImagePreviewBtn = document.getElementById('closeImagePreview');
+            const imagePreviewModal = document.getElementById('imagePreviewModal');
+            
+            if (closeImagePreviewBtn) {
+                closeImagePreviewBtn.addEventListener('click', closeImagePreview);
+            }
+            
+            if (imagePreviewModal) {
+                imagePreviewModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeImagePreview();
+                    }
+                });
+            }
+            
+            // 键盘事件支持
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('imagePreviewModal');
+                    if (modal && modal.style.display === 'flex') {
+                        closeImagePreview();
+                    }
+                }
+            });
+        }
+        
+        // 保存游戏数据到本地存储
+        function saveGameData() {
+            const gameData = {
+                state: state,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('baGachaData', JSON.stringify(gameData));
+        }
+        
+        // 从本地存储加载游戏数据
+        function loadGameData() {
+            const savedData = localStorage.getItem('baGachaData');
+            if (savedData) {
+                try {
+                    const gameData = JSON.parse(savedData);
+                    // 合并保存的状态数据
+                    Object.assign(state, gameData.state);
+                    console.log('游戏数据已加载');
+                } catch (error) {
+                    console.error('加载游戏数据失败:', error);
+                }
+            }
+        }
+        
+        // 重置游戏数据
+        function resetGameData() {
+            if (confirm('确定要重置所有抽卡数据吗？此操作不可恢复！')) {
+                state.pullCount = 0;
+                state.threeStarCount = 0;
+                state.twoStarCount = 0;
+                state.oneStarCount = 0;
+                state.newStudentCount = 0;
+                state.ownedStudents = [];
+                state.pityCount = 0;
+                state.lastPullResults = [];
+                state.pullHistory = [];
+                
+                // 清空显示
+                document.getElementById('results').innerHTML = '';
+                updateStats();
+                
+                // 保存重置后的数据
+                saveGameData();
+                
+                alert('游戏数据已重置！');
+            }
+        }
+
+        // 执行抽卡
+        function doPull(count, luckBonus = 0) {
+            // 显示加载动画
+            loadingEl.style.display = 'flex';
+            
+            // 播放音效
+            gachaSound.currentTime = 0;
+            gachaSound.play();
+            
+            // 清空结果
+            resultsEl.innerHTML = '';
+            
+            // 模拟网络延迟
+            setTimeout(() => {
+                const results = [];
+                let hasRare = false;
+                
+                for (let i = 0; i < count; i++) {
+                    const student = pullStudent(luckBonus);
+                    results.push(student);
+                    
+                    // 检查是否有3星
+                    if (student.rarity === 3) {
+                        hasRare = true;
+                    }
+                }
+                
+                // 如果有3星，播放稀有音效
+                if (hasRare) {
+                    rareSound.currentTime = 0;
+                    rareSound.play();
+                }
+                
+                // 显示结果
+                displayResults(results);
+                
+                // 更新状态
+                updateStats();
+                
+                // 隐藏加载动画
+                loadingEl.style.display = 'none';
+            }, 1500);
+        }
+
+        // 抽取一个学生（考虑运气加成和保底机制）
+        function pullStudent(luckBonus = 0) {
+            const random = Math.random() * 100;
+            let rarity;
+            
+            // 保底机制：如果已经抽了199次没有3星，第200次必定3星
+            if (state.pityCount >= 199) {
+                rarity = 3;
+                state.pityCount = 0; // 重置保底计数器
+            } else {
+                // 基础概率: 3★ 7.5% (双倍UP), 2★ 18.5%, 1★ 74%
+                // 加上运气加成（最多增加8%的3星概率）
+                const threeStarChance = 7.5 + luckBonus;
+                const twoStarChance = 18.5;
+                
+                if (random < threeStarChance) {
+                    rarity = 3;
+                    state.pityCount = 0; // 抽到3星重置保底计数器
+                } else if (random < threeStarChance + twoStarChance) {
+                    rarity = 2;
+                    state.pityCount++; // 增加保底计数器
+                } else {
+                    rarity = 1;
+                    state.pityCount++; // 增加保底计数器
+                }
+            }
+            
+            // 过滤对应稀有度的学生
+            const pool = students.filter(s => s.rarity === rarity);
+            const student = {...pool[Math.floor(Math.random() * pool.length)]};
+            
+            // 检查是否新学生
+            const isNew = !state.ownedStudents.includes(student.id);
+            if (isNew) {
+                state.ownedStudents.push(student.id);
+                student.new = true;
+                state.newStudentCount++;
+            }
+            
+            // 更新统计
+            state.pullCount++;
+            if (rarity === 3) state.threeStarCount++;
+            if (rarity === 2) state.twoStarCount++;
+            if (rarity === 1) state.oneStarCount++;
+            
+            return student;
+        }
+
+        // 显示结果
+        function displayResults(results) {
+            // 按稀有度排序 (3★在前)
+            results.sort((a, b) => b.rarity - a.rarity);
+            
+            // 为每个结果创建卡片
+            results.forEach((student, index) => {
+                setTimeout(() => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.animationDelay = `${index * 0.1}s`;
+                    
+                    card.innerHTML = `
+                        <div class="card-image clickable-image" style="background-image: url('${student.image}')">
+                            ${student.new ? '<div class="new-student">NEW</div>' : ''}
+                            <div class="card-rarity rarity-${student.rarity}">${student.rarity}★</div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-name">${student.name}</div>
+                            <div class="card-type">${student.type}</div>
+                        </div>
+                    `;
+                    
+                    resultsEl.appendChild(card);
+                }, index * 100);
+            });
+        }
+
+        // 更新统计显示
+        function updateStats() {
+            pullCountEl.textContent = state.pullCount;
+            threeStarCountEl.textContent = state.threeStarCount;
+            twoStarCountEl.textContent = state.twoStarCount;
+            oneStarCountEl.textContent = state.oneStarCount;
+            newStudentCountEl.textContent = state.newStudentCount;
+            document.getElementById('pityCount').textContent = state.pityCount;
+        }
+
+        // 假数据：卡池/角色列表
+        const banners = [
+            {
+                name: "爱丽丝",
+                star: 3,
+                cv: "田中美海",
+                image: "https://baimg.bigjackson.top/img/ailisi.png",
+                eventTitle: "庆典招募！",
+                eventTime: "2024/02/08 14:00~2024/02/13 13:59截止",
+                eventHighlight: "<span class='blue'>爱丽丝（3★）</span> 招募概率提升！",
+                eventDesc: "选择招募10次，必定获得1名2★以上成员！<br>※若出现已拥有的成员则会转换为神名精髓与该成员的神名字。"
+            },
+            {
+                name: "星野",
+                star: 3,
+                cv: "花守由美里",
+                image: "https://baimg.bigjackson.top/img/xingye.png",
+                eventTitle: "小鸟游星野",
+                eventTime: "2024/03/01 14:00~2024/03/10 13:59截止",
+                eventHighlight: "<span class='blue'>星野（3★）</span> 招募概率提升！",
+                eventDesc: "选择招募10次，必定获得1名2★以上成员！<br>※若出现已拥有的成员则会转换为神名精髓与该成员的神名字。"
+            },
+            {
+                name: "亚子",
+                star: 3,
+                cv: "高野麻里佳",
+                image: "https://baimg.bigjackson.top/img/yazi.png",
+                eventTitle: "伊织限时招募！",
+                eventTime: "2024/03/15 14:00~2024/03/22 13:59截止",
+                eventHighlight: "<span class='blue'>天雨亚子</span> 招募概率提升！",
+                eventDesc: "选择招募10次，必定获得1名2★以上成员！<br>※若出现已拥有的成员则会转换为神名精髓与该成员的神名字。"
+            }
+        ];
+        let currentBanner = 0;
+
+        function updateBanner() {
+            const banner = banners[currentBanner];
+            const characterImage = document.getElementById('characterImage');
+            characterImage.src = banner.image;
+            characterImage.className = 'clickable-image'; // 确保保持可点击样式
+            document.querySelector('.character-info .star').textContent = '★'.repeat(banner.star);
+            document.querySelector('.character-info .name').textContent = banner.name;
+            document.querySelector('.character-info .cv').textContent = '配音 ' + banner.cv;
+            document.querySelector('.event-title').textContent = banner.eventTitle;
+            document.querySelector('.event-time').textContent = banner.eventTime;
+            document.querySelector('.event-highlight').innerHTML = banner.eventHighlight;
+            document.querySelector('.event-desc').innerHTML = banner.eventDesc;
+        }
+        document.getElementById('prevBanner').onclick = function() {
+            currentBanner = (currentBanner - 1 + banners.length) % banners.length;
+            updateBanner();
+        };
+        document.getElementById('nextBanner').onclick = function() {
+            currentBanner = (currentBanner + 1) % banners.length;
+            updateBanner();
+        };
+        // 初始化
+        updateBanner();
+
+        // 初始化应用
+        init();
+
+        // 绑定新按钮
+        document.querySelector('.gacha-btn.single').onclick = function() {
+            showDrawingPanel(1);
+        };
+        document.querySelector('.gacha-btn.multi').onclick = function() {
+            showDrawingPanel(10);
+        };
+        // 关闭弹窗
+        document.getElementById('closeGachaResult').onclick = function() {
+            document.getElementById('gachaResultModal').style.display = 'none';
+        };
+        // 点击弹窗外部关闭
+        document.getElementById('gachaResultModal').onclick = function(e) {
+            if (e.target === this) this.style.display = 'none';
+        };
+        // 展示抽卡结果
+        function showGachaResult(count) {
+            // 播放音效
+            gachaSound.currentTime = 0;
+            gachaSound.play();
+            // 执行抽卡
+            const results = [];
+            let hasRare = false;
+            for (let i = 0; i < count; i++) {
+                const student = pullStudent();
+                results.push(student);
+                if (student.rarity === 3) hasRare = true;
+            }
+            if (hasRare) {
+                rareSound.currentTime = 0;
+                rareSound.play();
+            }
+            
+            // 保存到历史记录
+            const historyEntry = {
+                timestamp: new Date(),
+                count: count,
+                results: results,
+                hasRare: hasRare
+            };
+            state.pullHistory.unshift(historyEntry); // 添加到开头
+            state.lastPullResults = results;
+            
+            // 渲染卡片
+            const cardsEl = document.getElementById('gachaResultCards');
+            cardsEl.innerHTML = '';
+            results.sort((a, b) => b.rarity - a.rarity);
+            results.forEach(student => {
+                const card = document.createElement('div');
+                card.className = 'gacha-result-card';
+                card.innerHTML = `
+                    <img src="${student.image}" alt="${student.name}" class="clickable-image">
+                    <div class="star">${'★'.repeat(student.rarity)}</div>
+                    <div class="name">${student.name}</div>
+                    <div class="type">${student.type}</div>
+                    ${student.new ? '<div class="new-student" style="position:absolute;top:4px;left:4px;background:#ff4081;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.7rem;">NEW</div>' : ''}
+                `;
+                cardsEl.appendChild(card);
+            });
+            // 标题
+            document.getElementById('gachaResultTitle').textContent = count === 1 ? '抽卡结果' : '十连抽结果';
+            // 显示弹窗
+            document.getElementById('gachaResultModal').style.display = 'flex';
+            
+            // 更新统计
+            updateStats();
+            
+            // 保存游戏数据
+            saveGameData();
+        }
+        
+        // 显示历史记录
+        function showHistory() {
+            const historyContent = document.getElementById('historyContent');
+            historyContent.innerHTML = '';
+            
+            if (state.pullHistory.length === 0) {
+                historyContent.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">暂无抽卡记录</p>';
+            } else {
+                state.pullHistory.forEach((entry, index) => {
+                    const historyItem = document.createElement('div');
+                    historyItem.style.cssText = 'border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 10px; background: #fafafa;';
+                    
+                    const timeStr = entry.timestamp.toLocaleString('zh-CN');
+                    const countStr = entry.count === 1 ? '单抽' : '十连抽';
+                    
+                    historyItem.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span style="font-weight: bold; color: #1976d2;">${countStr}</span>
+                            <span style="color: #666; font-size: 0.9rem;">${timeStr}</span>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${entry.results.map(student => `
+                                <div style="display: flex; align-items: center; gap: 5px; background: white; padding: 5px; border-radius: 5px; border: 1px solid #e0e0e0;">
+                                    <img src="${student.image}" alt="${student.name}" style="width: 30px; height: 30px; border-radius: 3px;">
+                                    <span style="font-size: 0.9rem;">${student.name}</span>
+                                    <span style="color: ${student.rarity === 3 ? '#ffd700' : student.rarity === 2 ? '#b39ddb' : '#a5d6a7'}; font-weight: bold;">${'★'.repeat(student.rarity)}</span>
+                                    ${student.new ? '<span style="background: #ff4081; color: white; padding: 1px 3px; border-radius: 2px; font-size: 0.7rem;">NEW</span>' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    
+                    historyContent.appendChild(historyItem);
+                });
+            }
+            
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+        
+        // 绑定历史记录按钮
+        document.querySelector('.gacha-btn.history').onclick = showHistory;
+        
+        // 关闭历史记录弹窗
+        document.getElementById('closeHistory').onclick = function() {
+            document.getElementById('historyModal').style.display = 'none';
+        };
+        
+        // 点击历史记录弹窗外部关闭
+        document.getElementById('historyModal').onclick = function(e) {
+            if (e.target === this) this.style.display = 'none';
+        };
+        
+        // 移动端优化
+        function initMobileOptimizations() {
+            // 防止双击缩放
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // 防止页面缩放
+            document.addEventListener('gesturestart', function (e) {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('gesturechange', function (e) {
+                e.preventDefault();
+            });
+            
+            document.addEventListener('gestureend', function (e) {
+                e.preventDefault();
+            });
+            
+            // 优化触摸滚动
+            document.addEventListener('touchmove', function (e) {
+                if (e.target.closest('.drawing-panel') || e.target.closest('.gacha-result-modal')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // 添加触摸反馈
+            const buttons = document.querySelectorAll('.gacha-btn, .drawing-btn, .gacha-arrow');
+            buttons.forEach(button => {
+                button.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.95)';
+                });
+                
+                button.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                });
+                
+                button.addEventListener('touchcancel', function() {
+                    this.style.transform = '';
+                });
+            });
+            
+            // 检测设备类型并调整UI
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                document.body.classList.add('mobile-device');
+                
+                // 调整画板大小以适应移动设备
+                if (drawingCanvas) {
+                    const maxWidth = Math.min(window.innerWidth * 0.9, 600);
+                    const maxHeight = Math.min(window.innerHeight * 0.6, 400);
+                    drawingCanvas.width = maxWidth;
+                    drawingCanvas.height = maxHeight;
+                }
+            }
+        }
+        
+        // 窗口大小改变时重新调整
+        window.addEventListener('resize', function() {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile && drawingCanvas) {
+                const maxWidth = Math.min(window.innerWidth * 0.9, 600);
+                const maxHeight = Math.min(window.innerHeight * 0.6, 400);
+                drawingCanvas.width = maxWidth;
+                drawingCanvas.height = maxHeight;
+                clearCanvas(); // 重新清空画板
+            }
+        });
+        
+        // 初始化移动端优化
+        initMobileOptimizations();
+        
+        // 强制手机端隐藏角色大图
+        function forceHideGachaLeft() {
+            const gachaLeft = document.querySelector('.gacha-left');
+            if (gachaLeft && window.innerWidth <= 768) {
+                gachaLeft.style.display = 'none';
+                gachaLeft.style.visibility = 'hidden';
+                gachaLeft.style.opacity = '0';
+                gachaLeft.style.position = 'absolute';
+                gachaLeft.style.left = '-9999px';
+            }
+        }
+        
+        // 页面加载时执行
+        forceHideGachaLeft();
+        
+        // 窗口大小改变时执行
+        window.addEventListener('resize', forceHideGachaLeft);
+        
+        // 图片预览功能
+        function showImagePreview(student) {
+            const modal = document.getElementById('imagePreviewModal');
+            const previewImage = document.getElementById('previewImage');
+            const previewName = document.getElementById('previewName');
+            const previewDetails = document.getElementById('previewDetails');
+            
+            // 设置预览内容
+            previewImage.src = student.image;
+            previewImage.alt = student.name;
+            previewName.textContent = student.name;
+            previewDetails.innerHTML = `
+                <span style="color: ${student.rarity === 3 ? '#ffd700' : student.rarity === 2 ? '#b39ddb' : '#a5d6a7'}; font-weight: bold;">
+                    ${'★'.repeat(student.rarity)}
+                </span> | 
+                <span style="color: #666;">${student.type}</span>
+                ${student.new ? ' | <span style="background: #ff4081; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8rem;">NEW</span>' : ''}
+            `;
+            
+            // 显示弹窗
+            modal.style.display = 'flex';
+            
+            // 添加动画效果
+            const content = document.getElementById('imagePreviewContent');
+            content.style.transform = 'scale(0.8)';
+            content.style.opacity = '0';
+            
+            setTimeout(() => {
+                content.style.transition = 'all 0.3s ease';
+                content.style.transform = 'scale(1)';
+                content.style.opacity = '1';
+            }, 10);
+        }
+        
+        function closeImagePreview() {
+            const modal = document.getElementById('imagePreviewModal');
+            const content = document.getElementById('imagePreviewContent');
+            
+            // 添加关闭动画
+            content.style.transition = 'all 0.3s ease';
+            content.style.transform = 'scale(0.8)';
+            content.style.opacity = '0';
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+                content.style.transform = '';
+                content.style.opacity = '';
+            }, 300);
+        }
+        
+        // 为角色图片添加点击事件
+        function addImageClickEvents() {
+            // 为抽卡结果卡片添加点击事件
+            document.addEventListener('click', function(e) {
+                const cardImage = e.target.closest('.card-image');
+                const resultCard = e.target.closest('.gacha-result-card img');
+                const characterImage = e.target.closest('.gacha-character img');
+                
+                if (cardImage) {
+                    // 从卡片中找到学生信息
+                    const card = cardImage.closest('.card');
+                    const cardName = card.querySelector('.card-name').textContent;
+                    const student = students.find(s => s.name === cardName);
+                    if (student) {
+                        showImagePreview(student);
+                    }
+                } else if (resultCard) {
+                    // 从结果卡片中找到学生信息
+                    const card = resultCard.closest('.gacha-result-card');
+                    const cardName = card.querySelector('.name').textContent;
+                    const student = students.find(s => s.name === cardName);
+                    if (student) {
+                        showImagePreview(student);
+                    }
+                } else if (characterImage) {
+                    // 主界面角色大图
+                    const banner = banners[currentBanner];
+                    const student = students.find(s => s.name === banner.name);
+                    if (student) {
+                        showImagePreview(student);
+                    }
+                }
+            });
+        }
+        
+        // 绑定图片预览关闭事件
+        document.getElementById('closeImagePreview').addEventListener('click', closeImagePreview);
+        document.getElementById('imagePreviewModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImagePreview();
+            }
+        });
+        
+        // 键盘事件支持
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const imagePreviewModal = document.getElementById('imagePreviewModal');
+                if (imagePreviewModal.style.display === 'flex') {
+                    closeImagePreview();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
